@@ -2,3 +2,4 @@
 samples
 *.wl
 *.nb
+.venv
