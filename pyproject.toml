@@ -1,7 +1,19 @@
 [project]
-name = "graph-wiring-epiplexity"
+name = "graphwiringepiplexity"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.12"
-dependencies = []
+requirespython = ">=3.12"
+dependencies = [
+  "arrowspace==0.25.14",
+  "ipykernel==7.2.0",
+  "ipython==9.11.0",
+  "kaleido==1.2.0",
+  "matplotlib==3.10.8",
+  "numpy==2.4.2",
+  "pandas==3.0.1",
+  "pyarrow==23.0.1",
+  "scikit-learn==1.8.0",
+  "scipy==1.17.1",
+  "seaborn==0.13.2",
+]
