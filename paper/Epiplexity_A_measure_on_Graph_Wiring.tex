@@ -28,23 +28,23 @@
 \usepackage{listings}
 \usepackage{xcolor}
 
-% Configure Rust syntax highlighting
-\lstdefinelanguage{Rust}{
-	keywords={fn, let, mut, if, else, for, while, loop, match, enum, struct, impl,
-		trait, pub, use, mod, crate, self, super, const, static, unsafe,
-		extern, true, false, Some, None, Ok, Err, Vec, Box, Option, Result},
+% Configure Python syntax highlighting
+\lstdefinelanguage{Python}{
+	keywords={and, as, assert, break, class, continue, def, del, elif, else, 
+		except, False, finally, for, from, global, if, import, in, is, 
+		lambda, None, nonlocal, not, or, pass, raise, return, True, try, 
+		while, with, yield, async, await},
 	keywordstyle=\color{blue}\bfseries,
-	ndkeywords={String, str, i32, i64, f32, f64, u8, u16, u32, u64,
-		usize, isize, bool, char},
+	ndkeywords={self, cls, int, float, str, list, dict, set, tuple, bool, range},
 	ndkeywordstyle=\color{purple}\bfseries,
 	sensitive=true,
-	comment=[l]{//},
+	comment=[l]{\#},
 	commentstyle=\color{gray}\itshape,
 	string=[b]",
 	stringstyle=\color{red},
 	basicstyle=\ttfamily\footnotesize,
 	breaklines=true, breakatwhitespace=true,
-	tabsize=2, showstringspaces=false
+	tabsize=4, showstringspaces=false
 }
 
 \lstset{
@@ -61,8 +61,9 @@
 	rulecolor=\color{black!30},
 	captionpos=b,
 	breaklines=true, breakatwhitespace=false,
-	tabsize=2, showstringspaces=false
+	tabsize=4, showstringspaces=false
 }
+
 
 \providecommand{\keywords}[1]{\textbf{\textit{Keywords---}} #1}
 

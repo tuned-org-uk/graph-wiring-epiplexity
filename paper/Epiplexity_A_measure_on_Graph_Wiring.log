@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025) (preloaded format=pdflatex 2026.2.19)  8 MAR 2026 14:15
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025) (preloaded format=pdflatex 2026.2.19)  8 MAR 2026 14:25
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -480,24 +480,24 @@ or select author-year BibTeX style, e.g. plainnat
 )
 \openout1 = `Epiplexity_A_measure_on_Graph_Wiring.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 103.
-LaTeX Font Info:    ... okay on input line 103.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 103.
-LaTeX Font Info:    ... okay on input line 103.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 103.
-LaTeX Font Info:    ... okay on input line 103.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 103.
-LaTeX Font Info:    ... okay on input line 103.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 103.
-LaTeX Font Info:    ... okay on input line 103.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 103.
-LaTeX Font Info:    ... okay on input line 103.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 103.
-LaTeX Font Info:    ... okay on input line 103.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 103.
-LaTeX Font Info:    ... okay on input line 103.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 103.
-LaTeX Font Info:    ... okay on input line 103.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 104.
+LaTeX Font Info:    ... okay on input line 104.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 104.
+LaTeX Font Info:    ... okay on input line 104.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 104.
+LaTeX Font Info:    ... okay on input line 104.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 104.
+LaTeX Font Info:    ... okay on input line 104.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 104.
+LaTeX Font Info:    ... okay on input line 104.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 104.
+LaTeX Font Info:    ... okay on input line 104.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 104.
+LaTeX Font Info:    ... okay on input line 104.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 104.
+LaTeX Font Info:    ... okay on input line 104.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 104.
+LaTeX Font Info:    ... okay on input line 104.
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
@@ -555,7 +555,7 @@ Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
 File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
 e
 ))
-Package hyperref Info: Link coloring ON on input line 103.
+Package hyperref Info: Link coloring ON on input line 104.
 
 (./Epiplexity_A_measure_on_Graph_Wiring.out)
 (./Epiplexity_A_measure_on_Graph_Wiring.out)
@@ -563,13 +563,13 @@ Package hyperref Info: Link coloring ON on input line 103.
 \openout3 = `Epiplexity_A_measure_on_Graph_Wiring.out'.
 
 \c@lstlisting=\count325
-LaTeX Font Info:    Trying to load font information for U+msa on input line 105
+LaTeX Font Info:    Trying to load font information for U+msa on input line 106
 .
 
 (/usr/local/texlive/2025/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 105
+LaTeX Font Info:    Trying to load font information for U+msb on input line 106
 .
 
 (/usr/local/texlive/2025/texmf-dist/tex/latex/amsfonts/umsb.fd
@@ -580,7 +580,7 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 
 {/usr/local/texlive/2025/texmf-var/fonts/map/pdftex/updmap/pdftex.map}{/usr/loc
 al/texlive/2025/texmf-dist/fonts/enc/dvips/cm-super/cm-super-t1.enc}]
-Overfull \hbox (12.04517pt too wide) in paragraph at lines 173--179
+Overfull \hbox (12.04517pt too wide) in paragraph at lines 174--180
 \T1/cmr/m/n/12 (ii) \T1/cmtt/m/n/12 01_arrowspace_cve1999_2025-epiplexity_check
 _v3.ipynb\T1/cmr/m/n/12 , a full case study on the CVE 1999--
  []
@@ -590,7 +590,7 @@ _v3.ipynb\T1/cmr/m/n/12 , a full case study on the CVE 1999--
 [2{/usr/local/texlive/2025/texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc
 }]
 Package hyperref Info: bookmark level for unknown lstlisting defaults to 0 on i
-nput line 298.
+nput line 299.
 
 
 [3]
@@ -604,21 +604,21 @@ nput line 298.
 [7]
 
 [8]
-Overfull \hbox (12.76703pt too wide) in paragraph at lines 655--659
+Overfull \hbox (12.76703pt too wide) in paragraph at lines 656--660
  []\T1/cmr/bx/n/12 Loading the CVE cor-pus.[] \T1/cmr/m/n/12 The cor-pus is sto
 red as a Par-quet ta-ble with columns \T1/cmtt/m/n/12 col_0\T1/cmr/m/n/12 ...\T
 1/cmtt/m/n/12 col_383
  []
 
 
-Overfull \hbox (5.85599pt too wide) in paragraph at lines 676--679
+Overfull \hbox (5.85599pt too wide) in paragraph at lines 677--680
  []\T1/cmr/bx/n/12 Extracting $\OML/cmm/m/it/12 L[]$\T1/cmr/bx/n/12 .[] \T1/cmr
 /m/n/12 The feature-space Lapla-cian is re-cov-ered as a sparse CSR ma-trix via
  \T1/cmtt/m/n/12 gl.to_csr()
  []
 
 
-Overfull \hbox (28.72092pt too wide) in paragraph at lines 706--710
+Overfull \hbox (28.72092pt too wide) in paragraph at lines 707--711
  []\T1/cmr/bx/n/12 Rayleigh and $\OML/cmm/m/it/12 H[]$ \T1/cmr/bx/n/12 dis-tri-
 bu-tions (Ÿ8).[] \T1/cmr/m/n/12 Ar-rowS-pace ex-poses per-item $\OML/cmm/m/it/1
 2 ^^U$\T1/cmr/m/n/12 -scores via \T1/cmtt/m/n/12 aspace.lambdas()\T1/cmr/m/n/12
@@ -630,24 +630,24 @@ bu-tions (Ÿ8).[] \T1/cmr/m/n/12 Ar-rowS-pace ex-poses per-item $\OML/cmm/m/it/1
 [9]
 
 [10]
-Underfull \hbox (badness 10000) in paragraph at lines 807--808
+Underfull \hbox (badness 10000) in paragraph at lines 808--809
 []\T1/cmr/m/n/12 ArrowSpace CVE
  []
 
 
-Underfull \hbox (badness 3364) in paragraph at lines 812--814
+Underfull \hbox (badness 3364) in paragraph at lines 813--815
 []\T1/cmr/m/n/12 ONMSC multi-view
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 818--820
+Underfull \hbox (badness 10000) in paragraph at lines 819--821
 []\T1/cmr/m/n/12 RQGNN anomaly
  []
 
 
 
 [11]
-Overfull \hbox (0.2396pt too wide) in paragraph at lines 879--883
+Overfull \hbox (0.2396pt too wide) in paragraph at lines 880--884
 \T1/cmr/m/n/12 The four tools in \T1/cmtt/m/n/12 LLMDataEngineeringToolset\T1/c
 mr/m/n/12 ---epiplexity data se-lec-tion, spec-tral anomaly guard,
  []
@@ -669,8 +669,8 @@ s not changed.
  ) 
 Here is how much of TeX's memory you used:
  15602 strings out of 473190
- 236446 string characters out of 5715800
- 1171376 words of memory out of 5000000
+ 236448 string characters out of 5715800
+ 1171389 words of memory out of 5000000
  38372 multiletter control sequences out of 15000+600000
  587051 words of font info for 111 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
@@ -706,7 +706,7 @@ onts/type1/public/cm-super/sfti1095.pfb></usr/local/texlive/2025/texmf-dist/fon
 ts/type1/public/cm-super/sfti1200.pfb></usr/local/texlive/2025/texmf-dist/fonts
 /type1/public/cm-super/sftt1095.pfb></usr/local/texlive/2025/texmf-dist/fonts/t
 ype1/public/cm-super/sftt1200.pfb>
-Output written on Epiplexity_A_measure_on_Graph_Wiring.pdf (14 pages, 600464 by
+Output written on Epiplexity_A_measure_on_Graph_Wiring.pdf (14 pages, 600551 by
 tes).
 PDF statistics:
  670 PDF objects out of 1000 (max. 8388607)

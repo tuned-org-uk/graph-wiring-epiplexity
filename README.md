@@ -1,6 +1,18 @@
+# Epiplexity And Graph Wiring: An Empirical Study for the design of a generic algorithm
+
+Full paper in `paper/` and code in `notebooks/`. In `output/` the plotted diagrams, consider only `v3`.
+
+Download the data as in `samples/.gitkeep` to run the full pipeline.
+
+## Run the notebooks
+To install locally, us `uv`:
 ```
 uv venv .venv
 uv sync
+```
+Or simply in your virtual environment:
+```
+pip install .
 ```
 
 ## v1
