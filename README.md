@@ -1,6 +1,6 @@
 ```
 uv venv .venv
-us sync
+uv sync
 ```
 
 ## v1
@@ -13,5 +13,7 @@ us sync
 - The H_T spread is only ~5 bits across 314K items because `γ=1e-3` makes the fixed `log Z` term dominate — a β/γ sweep would find better discrimination
 - Two of the three SOTA citations compare feature-space (F×F) results against item-space (N×N) benchmarks, which are incommensurable domains
 
-## v2
+## v3
+
+Fixed the above problems.
 

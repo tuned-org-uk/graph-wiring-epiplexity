@@ -1,4 +1,4 @@
-Here's the complete Jupyter notebook. It contains **21 cells** (10 executable code + 11 theory markdown) and is fully self-contained — every class and function is defined from scratch using only standard Python scientific libraries.
+## 00_arrowspace_epiplexity_structural_information
 
 **What's inside, section by section:**
 
