@@ -91,7 +91,7 @@
 
 \title{%
 	\textbf{Epiplexity And Graph Wiring\\
-		An Empirical Study on Algorithm Design}
+		An Empirical Study\\ for the design of a generic algorithm}
 }
 \author{Lorenzo Moriondo\\
 	\small Independent Researcher --- tuned.org.uk\\
@@ -120,9 +120,9 @@
 		Description Length (MDL) code.
 		The model achieves a compression ratio of~$38.4\times$ over raw float32
 		storage, passes all three structural-information diagnostic tests. Furthermore
-		the same Laplacian object supports six distinct algorithm families
+		\emph{it is demonstrated that the same Laplacian object as computed by Graph Wiring supports six distinct algorithm families
 		(search, classification, anomaly detection, diffusion, dimensionality
-		reduction, and data valuation) without additional learning.
+		reduction, and data valuation) without additional learning}.
 		The two accompanying Jupyter notebooks are intended as a reproducible
 		reference pattern for applying epiplexity measurement in algorithm design
 		for large-scale data engineering for LLM and ML operations.
@@ -281,11 +281,11 @@
 	\section{Epiplexity Computation: A Tutorial Notebook}
 	\label{sec:prelim}
 	
-	Before presenting the CVE case study, this section walks through
+	Before presenting the CVE case study, this section walks through\\
 	\texttt{00\_arrowspace\_epiplexity\_structural\_information.ipynb}, a
 	self-contained notebook that introduces epiplexity measurement from
 	scratch using synthetic data and a pure-Python reimplementation of the
-	key ArrowSpace constructs.
+	key ArrowSpace constructs. The search capabilities on the CVE dataset have been extensively investigated in \href{https://www.tuned.org.uk/blog}{this devlog}.
 	The notebook is structured in nine sections, mirroring the theoretical
 	framework of~\cite{finzi2026epiplexity} and the pipeline stages of
 	ArrowSpace \citep{Moriondo2025ArrowSpace}.
@@ -295,19 +295,19 @@
 	The tutorial requires only standard scientific Python libraries:
 	
 	\begin{lstlisting}[caption={Tutorial notebook: dependency cell},
-		label={lst:deps00}]
-		import math, warnings
-		import numpy as np
-		import scipy.sparse as sp
-		import scipy.sparse.linalg as spla
-		from scipy.spatial.distance import cdist
-		from sklearn.neighbors import kneighbors_graph
-		import plotly.graph_objects as go
-		import plotly.express as px
-		
-		warnings.filterwarnings('ignore')
-		np.random.seed(42)
-		print("All dependencies loaded successfully.")
+	label={lst:deps00}]
+import math, warnings
+import numpy as np
+import scipy.sparse as sp
+import scipy.sparse.linalg as spla
+from scipy.spatial.distance import cdist
+from sklearn.neighbors import kneighbors_graph
+import plotly.graph_objects as go
+import plotly.express as px
+
+warnings.filterwarnings('ignore')
+np.random.seed(42)
+print("All dependencies loaded successfully.")
 	\end{lstlisting}
 	
 	Deliberately, no ArrowSpace import appears here; the tutorial implements
@@ -324,24 +324,24 @@
 	
 	\begin{lstlisting}[caption={Two-part MDL toy illustration},
 		label={lst:mdltoy}]
-		def two_part_mdl(model_bits, per_item_entropies):
-		return model_bits + sum(per_item_entropies)
-		
-		datasets = {
-			"Random noise (API keys, hashes)":
-			{"model_bits": 8,   "mean_entropy": 35.0, "n": 1000},
-			"Structured text (code, articles)":
-			{"model_bits": 950, "mean_entropy": 12.0, "n": 1000},
-			"LLM embeddings (ArrowSpace)":
-			{"model_bits": 420, "mean_entropy":  9.5, "n": 1000},
-		}
-		
-		for name, d in datasets.items():
-		mdl = two_part_mdl(d['model_bits'],
-		[d['mean_entropy']] * d['n'])
-		raw = d['n'] * 32
-		ratio = mdl / raw
-		print(f"{name:<38} MDL={mdl:.0f} bits  ratio={ratio:.3f}x")
+def two_part_mdl(model_bits, per_item_entropies):
+	return model_bits + sum(per_item_entropies)
+	
+datasets = {
+	"Random noise (API keys, hashes)":
+	{"model_bits": 8,   "mean_entropy": 35.0, "n": 1000},
+	"Structured text (code, articles)":
+	{"model_bits": 950, "mean_entropy": 12.0, "n": 1000},
+	"LLM embeddings (ArrowSpace)":
+	{"model_bits": 420, "mean_entropy":  9.5, "n": 1000},
+}
+
+for name, d in datasets.items():
+	mdl = two_part_mdl(d['model_bits'],
+	[d['mean_entropy']] * d['n'])
+	raw = d['n'] * 32
+	ratio = mdl / raw
+	print(f"{name:<38} MDL={mdl:.0f} bits  ratio={ratio:.3f}x")
 	\end{lstlisting}
 	
 	\noindent\textbf{Output:}
@@ -378,33 +378,33 @@
 	
 	\begin{lstlisting}[caption={Description length of the ArrowSpace program},
 		label={lst:desclength}]
-		def elias_gamma_bits(x: int) -> int:
-		return 2 * math.floor(math.log2(max(1, x))) + 1
+def elias_gamma_bits(x: int) -> int:
+	return 2 * math.floor(math.log2(max(1, x))) + 1
 		
-		def compute_description_length(N, F, C0=None, k=16, b=32, F_eff=None):
-		if C0 is None:
+def compute_description_length(N, F, C0=None, k=16, b=32, F_eff=None):
+	if C0 is None:
 		C0 = max(100, min(2000, int(2 * math.sqrt(N))))
-		if F_eff is None:
+	if F_eff is None:
 		F_eff = F
-		header   = sum(elias_gamma_bits(x) for x in [N, F, C0, k])
-		params   = 64 + 8 + 32
-		centroid = C0 * F_eff * b
-		topology = F * k * (math.ceil(math.log2(max(2, F))) + b)
-		total    = header + params + centroid + topology
-		raw      = N * F * b
-		return {"total_KB": total/8/1024, "raw_KB": raw/8/1024,
-			"compression_ratio": raw/total, "C0": C0}
+	header   = sum(elias_gamma_bits(x) for x in [N, F, C0, k])
+	params   = 64 + 8 + 32
+	centroid = C0 * F_eff * b
+	topology = F * k * (math.ceil(math.log2(max(2, F))) + b)
+	total    = header + params + centroid + topology
+	raw      = N * F * b
+	return {"total_KB": total/8/1024, "raw_KB": raw/8/1024,
+		"compression_ratio": raw/total, "C0": C0}
 		
-		scales = [
-		(1_000,     768,  "Small (1k / 768d)"),
-		(100_000,  1536,  "Medium (100k / 1536d)"),
-		(1_000_000,1536,  "LLM-scale (1M / 1536d)"),
-		(1_000_000,4096,  "LLM-large (1M / 4096d)"),
-		]
-		for N, F, label in scales:
-		r = compute_description_length(N, F)
-		print(f"{label:<28} |P_AS|={r['total_KB']:.1f} KB "
-		f"raw={r['raw_KB']:.0f} KB  {r['compression_ratio']:.1f}x")
+scales = [
+	(1_000,     768,  "Small (1k / 768d)"),
+	(100_000,  1536,  "Medium (100k / 1536d)"),
+	(1_000_000,1536,  "LLM-scale (1M / 1536d)"),
+	(1_000_000,4096,  "LLM-large (1M / 4096d)"),
+]
+for N, F, label in scales:
+	r = compute_description_length(N, F)
+	print(f"{label:<28} |P_AS|={r['total_KB']:.1f} KB "
+	f"raw={r['raw_KB']:.0f} KB  {r['compression_ratio']:.1f}x")
 	\end{lstlisting}
 	
 	\noindent\textbf{Output:}
@@ -454,8 +454,8 @@
 	
 	\begin{lstlisting}[caption={LGMRF wrapper satisfying Definition~7},
 		label={lst:lgmrfclass}]
-		class ArrowSpaceProbabilisticModel:
-		def __init__(self, L_F, beta=1.0, gamma=1e-3):
+class ArrowSpaceProbabilisticModel:
+	def __init__(self, L_F, beta=1.0, gamma=1e-3):
 		self.F  = L_F.shape[0]
 		self.L_F = L_F
 		self.Q  = beta * L_F.tocsc() + gamma * sp.eye(self.F,
@@ -466,24 +466,24 @@
 		self.log_Z = (0.5 * self.F * np.log(2*np.pi)
 		- 0.5 * self.log_det_Q)
 		
-		# Definition 7 - Evaluation  [O(nnz(L_F))]
-		def evaluate_log_prob(self, x):
+	# Definition 7 - Evaluation  [O(nnz(L_F))]
+	def evaluate_log_prob(self, x):
 		return float(-0.5 * x @ (self.Q @ x) - self.log_Z)
 		
-		# Definition 7 - Sampling  [O(F^1.5)]
-		def sample(self, n=1, rng=None):
+	# Definition 7 - Sampling  [O(F^1.5)]
+	def sample(self, n=1, rng=None):
 		rng = rng or np.random.default_rng(0)
 		z = rng.standard_normal((self.F, n))
 		return self._lu.solve(z)
 		
-		# Definition 7 - Normalisation  [O(1) given log Z]
-		def log_partition(self):
+	# Definition 7 - Normalisation  [O(1) given log Z]
+	def log_partition(self):
 		return self.log_Z
 		
-		def time_bounded_entropy(self, x):
+	def time_bounded_entropy(self, x):
 		return -self.evaluate_log_prob(x) / np.log(2)
 		
-		def rayleigh_quotient(self, x):
+	def rayleigh_quotient(self, x):
 		d = float(x @ x)
 		return float(x @ (self.L_F @ x)) / d if d > 1e-12 else 0.0
 	\end{lstlisting}
@@ -512,8 +512,8 @@
 	
 	\begin{lstlisting}[caption={MDL toolkit: compression test over three synthetic datasets},
 		label={lst:mdltoolkit}]
-		class ArrowSpaceMDLToolkit:
-		def __init__(self, X, k=5, beta=1.0, gamma=1e-3,
+class ArrowSpaceMDLToolkit:
+	def __init__(self, X, k=5, beta=1.0, gamma=1e-3,
 		sigma=1.0, n_centroids=None):
 		self.N, self.F = X.shape
 		self.C0  = n_centroids or max(10, min(200,
@@ -526,15 +526,15 @@
 		self.entropy  = np.array(
 		[self.model.time_bounded_entropy(x) for x in X])
 		
-		@property
-		def structural_bits(self):
+	@property
+	def structural_bits(self):
 		return self.model.description_length_bits(self.C0, self.k)
 		
-		@property
-		def compression_ratio(self):
+	@property
+	def compression_ratio(self):
 		return (self.N * self.F * 32) / self.mdl_total
 		
-		def compression_test(self):
+	def compression_test(self):
 		passes = self.mdl_total < self.N * self.F * 32
 		return {"compression_ratio": self.compression_ratio,
 			"passes_compression": passes, ...}
@@ -633,18 +633,18 @@
 	
 	\begin{lstlisting}[caption={Imports and ArrowSpace bindings},
 		label={lst:imports01}]
-		from arrowspace import ArrowSpaceBuilder, set_debug
-		
-		set_debug(False)
-		np.random.seed(42)
-		
-		GRAPH_PARAMS = {
-			'eps': 1.31, 'k': 45, 'topk': 15,
-			'p': 1.8,    'sigma': 0.535,
-		}
-		BUILDER_CFG = dict(seed=42, dims_reduction=False,
-		sampling_strategy='simple',
-		sampling_fraction=1.0)
+from arrowspace import ArrowSpaceBuilder, set_debug
+
+set_debug(False)
+np.random.seed(42)
+
+GRAPH_PARAMS = {
+	'eps': 1.31, 'k': 45, 'topk': 15,
+	'p': 1.8,    'sigma': 0.535,
+}
+BUILDER_CFG = dict(seed=42, dims_reduction=False,
+sampling_strategy='simple',
+sampling_fraction=1.0)
 	\end{lstlisting}
 	
 	The parameters $(\varepsilon, k, \sigma, p)$ are identical to the
@@ -661,15 +661,15 @@
 	
 	\begin{lstlisting}[caption={Building the production ArrowSpace index on CVE},
 		label={lst:build}]
-		import time
-		t0 = time.perf_counter()
-		aspace, gl = (
-		ArrowSpaceBuilder()
-		.with_seed(42)
-		.with_dims_reduction(enabled=False, eps=None)
-		.with_sampling('simple', 1.0)
-		).build(GRAPH_PARAMS, X)
-		print(f"Built in {time.perf_counter()-t0:.2f}s")
+import time
+t0 = time.perf_counter()
+aspace, gl = (
+ArrowSpaceBuilder()
+.with_seed(42)
+.with_dims_reduction(enabled=False, eps=None)
+.with_sampling('simple', 1.0)
+).build(GRAPH_PARAMS, X)
+print(f"Built in {time.perf_counter()-t0:.2f}s")
 	\end{lstlisting}
 	
 	\paragraph{Extracting $L_F$.}
@@ -685,10 +685,10 @@
 	
 	\begin{lstlisting}[caption={Production description length: CVE corpus},
 		label={lst:descprod}]
-		r = compute_description_length(N=313_841, F=384, k=45, b=32)
-		print(f"|P_AS| = {r['total_KB']:.1f} KB  "
-		f"raw = {r['raw_KB']:.0f} KB  "
-		f"ratio = {r['compression_ratio']:.1f}x")
+r = compute_description_length(N=313_841, F=384, k=45, b=32)
+print(f"|P_AS| = {r['total_KB']:.1f} KB  "
+f"raw = {r['raw_KB']:.0f} KB  "
+f"ratio = {r['compression_ratio']:.1f}x")
 	\end{lstlisting}
 	
 	\paragraph{LGMRF model (§7).}
@@ -712,14 +712,14 @@
 	
 	\begin{lstlisting}[caption={Two-part MDL and baselines for CVE},
 		label={lst:mdlcve}]
-		raw_bits  = 313_841 * 384 * 32          # float32 baseline
-		mdl_total = structural_bits + entropy_bits_sum  # two-part code
-		
-		compression_vs_raw  = raw_bits  / mdl_total
-		compression_vs_zlib = zlib_bits / mdl_total
-		
-		print(f"MDL compression vs raw  : {compression_vs_raw:.3f}x")
-		print(f"MDL compression vs zlib : {compression_vs_zlib:.3f}x")
+raw_bits  = 313_841 * 384 * 32          # float32 baseline
+mdl_total = structural_bits + entropy_bits_sum  # two-part code
+
+compression_vs_raw  = raw_bits  / mdl_total
+compression_vs_zlib = zlib_bits / mdl_total
+
+print(f"MDL compression vs raw  : {compression_vs_raw:.3f}x")
+print(f"MDL compression vs zlib : {compression_vs_zlib:.3f}x")
 	\end{lstlisting}
 	
 	\paragraph{Three-test diagnostic (§10--§11).}
@@ -762,7 +762,7 @@
 	\noindent\textbf{Verdict:} $L_F$ carries \textsc{structural information}
 	(all three tests pass).
 	The ArrowSpace feature-space Laplacian is a valid, compressive
-	representation of CVE domain structure --- not mere metadata.
+	representation of CVE domain structure --- not plain metadata.
 	
 	\paragraph{Compression ratio: $38.4\times$.}
 	This is far above the $> 1.0$ threshold.

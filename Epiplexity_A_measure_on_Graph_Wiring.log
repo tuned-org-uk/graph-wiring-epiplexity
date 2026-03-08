@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025) (preloaded format=pdflatex 2026.2.19)  8 MAR 2026 13:30
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025) (preloaded format=pdflatex 2026.2.19)  8 MAR 2026 13:57
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -589,12 +589,6 @@ _v3.ipynb\T1/cmr/m/n/12 , a full case study on the CVE 1999--
 
 [2{/usr/local/texlive/2025/texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc
 }]
-Overfull \hbox (157.6208pt too wide) in paragraph at lines 284--292
-\T1/cmr/m/n/12 Before pre-sent-ing the CVE case study, this sec-tion walks thro
-ugh \T1/cmtt/m/n/12 00_arrowspace_epiplexity_structural_information.ipynb\T1/cm
-r/m/n/12 ,
- []
-
 Package hyperref Info: bookmark level for unknown lstlisting defaults to 0 on i
 nput line 298.
 
@@ -608,6 +602,8 @@ nput line 298.
 [6]
 
 [7]
+
+[8]
 Overfull \hbox (12.76703pt too wide) in paragraph at lines 655--659
  []\T1/cmr/bx/n/12 Loading the CVE cor-pus.[] \T1/cmr/m/n/12 The cor-pus is sto
 red as a Par-quet ta-ble with columns \T1/cmtt/m/n/12 col_0\T1/cmr/m/n/12 ...\T
@@ -615,8 +611,6 @@ red as a Par-quet ta-ble with columns \T1/cmtt/m/n/12 col_0\T1/cmr/m/n/12 ...\T
  []
 
 
-
-[8]
 Overfull \hbox (5.85599pt too wide) in paragraph at lines 676--679
  []\T1/cmr/bx/n/12 Extracting $\OML/cmm/m/it/12 L[]$\T1/cmr/bx/n/12 .[] \T1/cmr
 /m/n/12 The feature-space Lapla-cian is re-cov-ered as a sparse CSR ma-trix via
@@ -641,6 +635,8 @@ bu-tions (Ÿ8).[] \T1/cmr/m/n/12 Ar-rowS-pace ex-poses per-item $\OML/cmm/m/it/1
 
 
 [9]
+
+[10]
 Underfull \hbox (badness 10000) in paragraph at lines 807--808
 []\T1/cmr/m/n/12 ArrowSpace CVE
  []
@@ -657,15 +653,13 @@ Underfull \hbox (badness 10000) in paragraph at lines 818--820
 
 
 
-[10]
+[11]
 Overfull \hbox (0.2396pt too wide) in paragraph at lines 879--883
 \T1/cmr/m/n/12 The four tools in \T1/cmtt/m/n/12 LLMDataEngineeringToolset\T1/c
 mr/m/n/12 ---epiplexity data se-lec-tion, spec-tral anomaly guard,
  []
 
 
-
-[11]
 
 [12]
 
@@ -683,11 +677,11 @@ s not changed.
 Here is how much of TeX's memory you used:
  15602 strings out of 473190
  236446 string characters out of 5715800
- 1144376 words of memory out of 5000000
+ 1171376 words of memory out of 5000000
  38372 multiletter control sequences out of 15000+600000
  587051 words of font info for 111 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,11n,79p,652b,2040s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,11n,79p,652b,2159s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb
 ></usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb>
 </usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb><
@@ -719,11 +713,11 @@ onts/type1/public/cm-super/sfti1095.pfb></usr/local/texlive/2025/texmf-dist/fon
 ts/type1/public/cm-super/sfti1200.pfb></usr/local/texlive/2025/texmf-dist/fonts
 /type1/public/cm-super/sftt1095.pfb></usr/local/texlive/2025/texmf-dist/fonts/t
 ype1/public/cm-super/sftt1200.pfb>
-Output written on Epiplexity_A_measure_on_Graph_Wiring.pdf (14 pages, 597468 by
+Output written on Epiplexity_A_measure_on_Graph_Wiring.pdf (14 pages, 600386 by
 tes).
 PDF statistics:
- 669 PDF objects out of 1000 (max. 8388607)
- 584 compressed objects within 6 object streams
+ 670 PDF objects out of 1000 (max. 8388607)
+ 585 compressed objects within 6 object streams
  268 named destinations out of 1000 (max. 500000)
  201 words of extra memory for PDF output out of 10000 (max. 10000000)
 
