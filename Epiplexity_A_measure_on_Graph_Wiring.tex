@@ -125,7 +125,7 @@
 		reduction, and data valuation) without additional learning}.
 		The two accompanying Jupyter notebooks are intended as a reproducible
 		reference pattern for applying epiplexity measurement in algorithm design
-		for large-scale data engineering for LLM and ML operations.
+		for large-scale data engineering for LLMs and ML operations.
 	\end{abstract}
 	
 	\keywords{Epiplexity, Graph Laplacian, Graph Wiring, ArrowSpace,
@@ -285,7 +285,7 @@
 	\texttt{00\_arrowspace\_epiplexity\_structural\_information.ipynb}, a
 	self-contained notebook that introduces epiplexity measurement from
 	scratch using synthetic data and a pure-Python reimplementation of the
-	key ArrowSpace constructs. The search capabilities on the CVE dataset have been extensively investigated in \href{https://www.tuned.org.uk/blog}{this devlog}.
+	key ArrowSpace constructs.
 	The notebook is structured in nine sections, mirroring the theoretical
 	framework of~\cite{finzi2026epiplexity} and the pipeline stages of
 	ArrowSpace \citep{Moriondo2025ArrowSpace}.
@@ -620,7 +620,7 @@ class ArrowSpaceMDLToolkit:
 	
 	This section walks through
 	\texttt{01\_arrowspace\_cve1999\_2025\_epiplexity\_check\_v3.ipynb}
-	cell by cell.
+	cell by cell. The search capabilities on the CVE dataset have been extensively investigated in \href{https://www.tuned.org.uk/blog}{this devlog}.
 	The notebook applies the full framework from Section~\ref{sec:prelim}
 	to a real-world dataset of $N=313{,}841$ CVE entries embedded in
 	$F=384$ dimensions.
@@ -665,9 +665,9 @@ import time
 t0 = time.perf_counter()
 aspace, gl = (
 ArrowSpaceBuilder()
-.with_seed(42)
-.with_dims_reduction(enabled=False, eps=None)
-.with_sampling('simple', 1.0)
+	.with_seed(42)
+	.with_dims_reduction(enabled=False, eps=None)  # no reduction
+	.with_sampling('simple', 1.0)  # no sampling
 ).build(GRAPH_PARAMS, X)
 print(f"Built in {time.perf_counter()-t0:.2f}s")
 	\end{lstlisting}
@@ -692,7 +692,7 @@ f"ratio = {r['compression_ratio']:.1f}x")
 	\end{lstlisting}
 	
 	\paragraph{LGMRF model (§7).}
-	The production Laplacian ($384\times 384$, sparse) is wrapped in
+	The production Laplacian ($384\times 384$, sparse) is wrapped in\\
 	\texttt{ArrowSpaceProbabilisticModel} with $(\beta,\gamma)=(1.0,
 	10^{-3})$.
 	A $\beta/\gamma$ sensitivity sweep over $1{,}000$ randomly sampled
