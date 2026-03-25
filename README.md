@@ -2,6 +2,8 @@
 
 A generic tool for measuring **epiplexity** (Finzi et al., 2026) -- the structural information learnable by a computationally bounded observer -- for *any* algorithm wrapped as a T-time probabilistic model.
 
+References, paper and notebooks [available here](https://github.com/tuned-org-uk/graph-wiring-epiplexity).
+
 ---
 
 ## Table of Contents
