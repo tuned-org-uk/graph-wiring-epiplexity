@@ -1,115 +1,455 @@
-# Epiplexity And Graph Wiring: An Empirical Study for the design of a generic algorithm
+# epiplexity
 
+A generic tool for measuring **epiplexity** (Finzi et al., 2026) -- the structural information learnable by a computationally bounded observer -- for *any* algorithm wrapped as a T-time probabilistic model.
 
-Full paper in `paper/` and code in `notebooks/`. In `output/` the plotted diagrams, consider only `v3`.
+---
 
-Download the data as in `samples/.gitkeep` to run the full pipeline.
+## Table of Contents
 
-## Abstract
+1. [Background](#background)
+2. [Installation](#installation)
+3. [Package layout](#package-layout)
+4. [Core concepts](#core-concepts)
+5. [How to define your own adapter](#how-to-define-your-own-adapter)
+6. [Built-in adapters](#built-in-adapters)
+7. [Interpreting results](#interpreting-results)
+8. [Epiplexity properties and their tests](#epiplexity-properties-and-their-tests)
+9. [Running the test suite](#running-the-test-suite)
+10. [Full worked example: scikit-learn classifier](#full-worked-example)
 
-> Having introduced *Graph Wiring*, a technique that leverages the Graph Laplacian computed in feature space to provide semantically-aware search over high-dimensional vector corpora, and *MRR-Top0* as a topology-aware retrieval metric for evaluating it; this paper proceeds to demonstrate formally and empirically that the feature-space Laplacian produced by ArrowSpace carries *structural information* in the sense of epiplexity finzi2026epiplexity, so that it is not plain graph metadata but a reusable context-bound semantic artifact.
-Using the CVE-1999--2025 vulnerability corpus as a case study, we instantiate ArrowSpace as a spectral vector-search engine, wrap its feature-space Laplacian in a Laplacian-constrained Gaussian Markov Random Field (LGMRF), and evaluate the resulting two-part Minimum
-Description Length (MDL) code. The model achieves *a compression ratio of~38.4x over raw float32 storage, passes all three structural-information diagnostic tests*. Furthermore *it is demonstrated that the same Laplacian object as computed by Graph Wiring supports six distinct algorithm families (search, classification, anomaly detection, diffusion, dimensionality
-reduction, and data valuation) without additional learning*.
-The two accompanying Jupyter notebooks are intended as a reproducible reference pattern for applying epiplexity measurement in algorithm design for large-scale data engineering for LLMs and ML operations.
+---
 
-## Run the notebooks
-To install locally, us `uv`:
+## Background
+
+Classical Shannon entropy and Kolmogorov complexity both assume unlimited computation.
+**Epiplexity** captures what a *bounded* observer can actually learn, splitting dataset X into:
+
+    MDL_T(X)  =  S_T(X)          +  H_T(X)
+                 epiplexity           time-bounded entropy
+                 (structural bits)    (random bits)
+
+| Symbol   | Name                     | Meaning |
+|----------|--------------------------|---------|
+| S_T(X)   | **Epiplexity**           | Bits to describe the model program; learnable structure |
+| H_T(X)   | **Time-bounded entropy** | Per-item irreducible noise for a bounded observer |
+| MDL_T(X) | Two-part MDL code        | Total description length under time-bound T |
+
+**Compression test:** if `MDL_T(X) < n_raw` the model captures real structure, not metadata.
+
+> Finzi, Qiu, Jiang, Izmailov, Kolter, Wilson -- *"From Entropy to Epiplexity: Rethinking
+> Information for Computationally Bounded Intelligence"*, arXiv:2601.03220, 2026.
+
+---
+
+## Installation
+
+```bash
+pip install -e .
+pip install transformers    # optional: LM adapter
+pip install torch_geometric # optional: GNN adapter
 ```
-uv venv .venv
-uv sync
+
+---
+
+## Package layout
+
 ```
-Or simply in your virtual environment:
+epiplexity/
+|-- model.py                  # TTimeProbabilisticModel ABC
+|-- engine.py                 # EpiplexityEngine (MDL calculator)
+`-- algorithms/
+    |-- arrowspace.py         # ArrowSpace LGMRF adapter
+    |-- torch_classifier.py   # PyTorch classifier adapter
+    |-- transformer_lm.py     # Auto-regressive LM adapter
+    `-- gnn.py                # Graph neural network adapter
+
+tests/
+|-- conftest.py                      # Shared fixtures, tiny synthetic models
+|-- test_model.py                    # ABC contract tests
+|-- test_engine.py                   # Engine arithmetic + verdict tests
+|-- test_torch_classifier.py         # TorchClassifierModelAdapter tests
+|-- test_transformer_lm.py           # TransformerLMModelAdapter tests
+|-- test_gnn.py                      # GNNModelAdapter tests
+`-- test_epiplexity_properties.py    # Cross-algorithm semantic property tests (P1-P8)
 ```
-pip install .
+
+---
+
+## Core concepts
+
+### TTimeProbabilisticModel (epiplexity/model.py)
+
+```python
+from abc import ABC, abstractmethod
+from typing import Any
+
+class TTimeProbabilisticModel(ABC):
+
+    @abstractmethod
+    def description_length_bits(self) -> float:
+        # S_T(X) proxy: bits to describe this program/model
+        ...
+
+    @abstractmethod
+    def log_prob(self, x: Any) -> float:
+        # log P(x) in natural log. Must be <= 0.
+        ...
+
+    @abstractmethod
+    def sample(self, n: int = 1) -> Any:
+        # Draw n samples from P. May raise NotImplementedError.
+        ...
+
+    @abstractmethod
+    def raw_bits(self, X: Any) -> float:
+        # Uncompressed bit-size of dataset X (the 'do nothing' baseline).
+        ...
 ```
 
-## Theoretical backgorund summary
+### EpiplexityEngine (epiplexity/engine.py)
 
-> what is the relation between Entropy and Complexity in Information Theory and Algorithmic information theory (Shannon/Kolmogorov)? and how Epiplexity try to reframe these definitions?
+```python
+engine = EpiplexityEngine(adapter, dataset)
 
-Entropy and complexity coincide only in special averaged senses: Shannon entropy measures average unpredictability under a probabilistic model, while Kolmogorov complexity measures description length of individual objects, and epiplexity reframes both as *compute‑relative* notions that split “information” into time‑bounded noise vs. learnable structure.[^1][^2][^3][^4][^5][^6]
+engine.structural_bits      # S_T(X)            float
+engine.entropy_bits         # H_T(x_i) per item np.ndarray
+engine.total_entropy_bits   # H_T(X)            float
+engine.mdltotal_bits        # S_T + H_T
+engine.raw_bits_total()     # uncompressed baseline
+engine.compression_ratio()  # raw / MDL  (>1 means structural)
+engine.report()             # prints formatted summary
+```
 
-### Shannon vs. Kolmogorov: core relation
+---
 
-- Shannon entropy $H(X)$ is the expected number of bits needed to encode draws from a random variable $X$ under an optimal code for a given distribution.[^4]
-- Kolmogorov complexity $K(x)$ is the length of the shortest program that outputs a specific finite string $x$ on a universal Turing machine.[^4]
-- For any *fixed* computable distribution, the expected Kolmogorov complexity of samples equals the Shannon entropy up to an additive constant; equivalently, Shannon entropy is the average of Kolmogorov complexity over typical realizations.[^2]
-- There is a deep structural parallel: any linear information inequality that holds for Shannon entropy also holds (up to logarithmic slack) for Kolmogorov complexities, and vice versa.[^7][^5]
+## How to define your own adapter
 
-So entropy is model‑based and distribution‑level, whereas Kolmogorov complexity is model‑free and sequence‑level; they align only after taking expectations under a computable source.[^2][^4]
+### Step 1 -- Subclass TTimeProbabilisticModel
 
-### Entropy vs. (algorithmic) complexity
+```python
+from epiplexity.model import TTimeProbabilisticModel
 
-- High Shannon entropy means high *unpredictability*: a fair coin sequence has maximal entropy per bit, but a *particular* long coin‑flip string is algorithmically simple if you just list it, and has no compressible regularities beyond the source law.[^4]
-- High Kolmogorov complexity means no short description: random sequences are maximally complex in this sense, but so are many highly structured objects that simply lack short programs given the chosen universal machine.[^4]
-- Complexity science often wants “organized structure at the edge of chaos,” which lies *between* low‑entropy order and high‑entropy noise; neither Shannon entropy nor bare $K(x)$ cleanly isolates that regime.[^8][^9][^10]
+class MyAlgorithmAdapter(TTimeProbabilisticModel):
+    def __init__(self, my_model, config):
+        self.model  = my_model
+        self.config = config
+```
 
-Thus, both classical measures conflate two different things: noise‑like unpredictability and learnable structure, especially for computationally bounded observers.[^9][^3][^6]
+---
 
-### Time‑bounded notions and their role
+### Step 2 -- description_length_bits -> S_T(X)
 
-- Time‑bounded Kolmogorov complexity $K^t(x)$ restricts programs to run within a time budget $t$; its expectation again matches Shannon entropy under suitable computability assumptions, linking average time‑bounded description length to entropy.[^2]
-- For a finite compute budget, what you cannot feasibly exploit appears as “effective randomness,” even if there is latent simple structure requiring more time to uncover.[^3][^2]
+**S_T(X)** is the epiplexity proxy: bits to fully specify the algorithm's program.
 
-This moves us toward viewing entropy and complexity as *observer‑relative* rather than absolute: they depend on which patterns are computationally tractable.
+What to include:
 
-### How epiplexity reframes things
+| Component          | Example |
+|--------------------|---------|
+| Learned parameters | num_params x bits_per_param |
+| Architecture       | Layer sizes, graph topology |
+| Hyperparameters    | Learning rate, cluster count |
+| Training seed      | ~64 bits |
 
-Epiplexity (from “epi‑” + “complexity”) is proposed as an information measure for *computationally bounded* agents, explicitly splitting information into two components.[^6][^1][^3]
+**Elias gamma coding** for non-negative integers (prefix-free):
 
-- Relative to a given compute budget, they define:
-    - **Time‑bounded entropy**: the part of the data that remains effectively unpredictable or uncompressible for that observer—what still looks like noise under the best algorithms they can afford.[^1][^3][^6]
-    - **Epiplexity**: the amount of *learnable structural information* that the observer can in fact extract and reuse—roughly, the budget‑relative, algorithmically exploitable complexity of the data.[^3][^6][^1]
+```python
+import math
+def elias_gamma_bits(x: int) -> int:
+    return 2 * math.floor(math.log2(max(1, x))) + 1
+```
 
-Key reframings:
+**Precision table:**
 
-- Classical Shannon entropy and Kolmogorov complexity implicitly assume unbounded computation, so they do not distinguish between “structure I could in principle learn” and “structure I can actually learn with my resources.”[^6][^3]
-- Epiplexity makes this distinction explicit by conditioning on a computational class: as you increase compute, some apparent epiplexity collapses into lower time‑bounded entropy when you discover simpler generative mechanisms.[^1][^3]
-- They define **epiplexity emergence**: in multi‑step processes (e.g. cellular automata), low‑compute observers see increasing structural complexity over time, whereas high‑compute observers can simulate or invert the dynamics cheaply and thus perceive less emergent complexity.[^3]
+| Setting      | bits_per_param |
+|--------------|---------------|
+| float64      | 64 |
+| float32      | 32 |
+| float16/fp16 | 16 |
+| int8 quant   | 8  |
 
-In the ML context, epiplexity tracks the reusable circuit depth a model must internalize to perform a task, rather than just the unpredictability of labels: factorisations or tasks that force higher epiplexity empirically correlate with better out‑of‑distribution generalization.[^1][^3]
+Example:
 
-### Conceptual summary
+```python
+def description_length_bits(self) -> float:
+    num_params  = sum(p.numel() for p in self.model.parameters())
+    param_bits  = num_params * self.config.bits_per_param
+    arch_bits   = elias_gamma_bits(self.config.hidden_dim)
+    overhead    = 64  # seed + flags
+    return float(param_bits + arch_bits + overhead)
+```
 
-- Shannon entropy: average unpredictability under a known distribution; good for coding and inference, blind to computational limits.[^9][^4]
-- Kolmogorov complexity: shortest description of individual objects; connects to entropy in expectation but remains uncomputable and agnostic to resource bounds.[^5][^2][^4]
-- Epiplexity: compute‑relative structural complexity, defined together with time‑bounded entropy to separate what looks like noise from what can be learned by a bounded observer, aiming to capture the “useful” part of complexity that drives emergent structure and generalization.[^6][^3][^1]
+> Observer-dependence (Property P4): S_T should grow monotonically with
+> bits_per_param and model size -- more compute means more structure encoded.
 
-<div align="center">⁂</div>
+---
 
-[^1]: https://arxiviq.substack.com/p/from-entropy-to-epiplexity-rethinking
+### Step 3 -- log_prob -> per-item H_T contribution
 
-[^2]: https://sqigmath.tecnico.ulisboa.pt/pub/SoutoA/11-TMSA-entropy.pdf
+Return `log P(x)` in **natural logarithm** for a single item.  The engine converts to bits:
 
-[^3]: https://www.alphaxiv.org/overview/2601.03220
+    H_T(x_i) = -log2 P(x_i) = -log P(x_i) / log(2)
 
-[^4]: https://en.wikipedia.org/wiki/Entropy_(information_theory)
+This must be <= 0 since P(x) is a probability in (0, 1].
 
-[^5]: https://www.lirmm.fr/~ashen/mathtext/inequal/final.pdf
+Probabilistic interpretation guide:
 
-[^6]: https://www.youtube.com/watch?v=opGMkWbzM88
+| Algorithm type        | P(x)                            | Implementation |
+|-----------------------|---------------------------------|----------------|
+| Classifier            | P(y|x) via softmax              | `log_softmax(logits)[y]` |
+| Language model        | prod_t P(x_t | x_{<t})         | sum of token log-probs |
+| GNN                   | P(y|G) via softmax              | `log_softmax(logits)[y]` |
+| ArrowSpace (LGMRF)    | N(0, Q^{-1})                    | `-0.5 * x^T Q x - log Z` |
+| Density estimator     | direct model output             | `model.log_prob(x)` |
+| Autoencoder           | reconstruction likelihood       | `-0.5 * ||x - x_hat||^2 / sigma^2` |
 
-[^7]: https://www.sciencedirect.com/science/article/pii/S002200009991677X
+Example for a classifier:
 
-[^8]: https://pubmed.ncbi.nlm.nih.gov/35895715/
+```python
+def log_prob(self, x) -> float:
+    features, label = x
+    with torch.no_grad():
+        logits = self.model(features.unsqueeze(0))
+        lp = torch.log_softmax(logits, dim=-1)[0, int(label)]
+    return float(lp)
+```
 
-[^9]: https://www.pnas.org/doi/10.1073/pnas.2119089119
+> Tip: for non-probabilistic algorithms, treat the score function f(x) as negative energy:
+> P(x) proportional to exp(-f(x)), with normalisation estimated from the dataset.
 
-[^10]: https://arxiv.org/pdf/math/0107067.pdf
+---
 
-## ChangeLog
-### v1
+### Step 4 -- raw_bits -> uncompressed baseline
 
-**🔴 Critical bug in §13 (Spectral Anomaly Guard):** The z-scores of 30.96σ and 66.68σ are artifacts — the code compares raw Python-computed Rayleigh quotients (values ~4–9) against ArrowSpace's taumode-compressed lambdas (range ). These are two *incompatible scales*. The ArrowSpace Rust engine applies a bounded sigmoid map `E/(E+τ)` plus optional dispersion mixing before storing lambdas, which the Python `model.rayleigh_quotient()` doesn't replicate. The fix is either to use native `rayleigh_pop[item_idx]` for the z-score, or to reimplement the full taumode pipeline in Python.[^1]
+Return the total bit-size under a "do nothing" encoding.
 
-**🟡 Three moderate issues:**
+| Data type      | Baseline |
+|----------------|----------|
+| Float32 tensor | N x F x 32 bits |
+| Float16 tensor | N x F x 16 bits |
+| Raw text       | 8 x num_chars bits |
+| Graph nodes    | num_nodes x F x 32 bits |
+| Graph edges    | 2 x num_edges x 32 bits |
 
-- The 38.4× compression ratio is real but inflated by comparing against raw float32 — adding a `zlib` baseline and a diagonal Gaussian baseline would give a fairer picture
-- The H_T spread is only ~5 bits across 314K items because `γ=1e-3` makes the fixed `log Z` term dominate — a β/γ sweep would find better discrimination
-- Two of the three SOTA citations compare feature-space (F×F) results against item-space (N×N) benchmarks, which are incommensurable domains
+```python
+def raw_bits(self, X) -> float:
+    return float(sum(x.numel() * 32 for x, _ in X))
+```
 
-### v3
+---
 
-Fixed the above problems.
+### Step 5 -- sample (optional)
 
+Required by Definition 7 for a formally valid T-time probabilistic model, but not used by
+EpiplexityEngine.  For discriminative models, `NotImplementedError` is acceptable:
+
+```python
+def sample(self, n: int = 1):
+    raise NotImplementedError("Sampling is task-specific for discriminative models.")
+```
+
+---
+
+### Step 6 -- Run EpiplexityEngine
+
+```python
+from epiplexity.engine import EpiplexityEngine
+
+adapter = MyAlgorithmAdapter(my_trained_model, my_config)
+engine  = EpiplexityEngine(adapter, my_dataset)
+engine.report()
+```
+
+Expected output:
+
+```
+Epiplexity report
+-----------------
+  Structural bits S_T     :   512.00 KB
+  Random bits H_T         :   128.00 KB
+  Total MDL S_T + H_T     :   640.00 KB
+  Raw size                :  3000.00 KB
+  Compression ratio       :     4.69x
+  Verdict                 : STRUCTURAL
+```
+
+---
+
+## Built-in adapters
+
+### PyTorch classifier
+
+```python
+from epiplexity.algorithms.torch_classifier import (
+    TorchClassifierModelAdapter, TorchClassifierEpiplexityConfig,
+)
+cfg     = TorchClassifierEpiplexityConfig(bits_per_param=32, overhead_bits=8192.0)
+adapter = TorchClassifierModelAdapter(model, cfg)
+engine  = EpiplexityEngine(adapter, dataset)  # dataset: list of (Tensor, int)
+```
+
+- S_T = num_params x bits_per_param + overhead
+- H_T(x_i) = -log2 P(y_i|x_i) under softmax
+
+### Transformer language model
+
+```python
+from epiplexity.algorithms.transformer_lm import (
+    TransformerLMModelAdapter, TransformerLMEpiplexityConfig,
+)
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+model     = AutoModelForCausalLM.from_pretrained("gpt2")
+tokenizer = AutoTokenizer.from_pretrained("gpt2")
+cfg       = TransformerLMEpiplexityConfig(bits_per_param=16, max_length=2048)
+adapter   = TransformerLMModelAdapter(model, tokenizer, cfg)
+engine    = EpiplexityEngine(adapter, ["text item 1", "text item 2"])
+```
+
+- S_T = num_params x bits_per_param + overhead
+- H_T(x_i) = sum of per-token negative log-probs
+
+### Graph neural network
+
+```python
+from epiplexity.algorithms.gnn import GNNModelAdapter, GNNEpiplexityConfig
+cfg     = GNNEpiplexityConfig(bits_per_param=32, overhead_bits=16384.0)
+adapter = GNNModelAdapter(model, cfg)
+engine  = EpiplexityEngine(adapter, graph_dataset)  # list of (graph_obj, int)
+# graph_obj must have .x (node features) and .edge_index
+```
+
+### ArrowSpace spectral LGMRF
+
+```python
+from epiplexity.algorithms.arrowspace import ArrowSpaceModelAdapter
+adapter = ArrowSpaceModelAdapter(arrowspace_model, C0=200, k=16, b=32)
+# arrowspace_model must expose:
+#   .evaluatelogprob(x)           natural log
+#   .descriptionlengthbits(C0,k,b)
+#   .sample(n)                    shape (F, n)
+engine  = EpiplexityEngine(adapter, X)  # X: np.ndarray (N, F)
+```
+
+---
+
+## Interpreting results
+
+| Metric                 | What it tells you |
+|------------------------|-------------------|
+| structural_bits (S_T)  | Information absorbed into weights. Grows with capacity and compute budget. |
+| total_entropy_bits (H_T) | Irreducible noise; decreases as the model improves on the data. |
+| compression_ratio > 1  | Algorithm compresses data -> passes the structural content test. |
+| compression_ratio < 1  | Model too large, data too small, or data is effectively random noise. |
+| Verdict: STRUCTURAL    | MDL_T < raw_bits. The algorithm found learnable structure. |
+| Verdict: METADATA      | MDL_T >= raw_bits. The algorithm is not compressive for this data. |
+
+**bits_per_param is the T-budget knob.** Lower = more restricted observer. Higher = richer
+observer. S_T grows monotonically -- this is the observer-dependence property (P4).
+
+---
+
+## Epiplexity properties and their tests
+
+`tests/test_epiplexity_properties.py` verifies eight formal properties across all adapters:
+
+| Property | Test class | What is verified |
+|----------|------------|------------------|
+| P1 MDL identity         | TestP1_MDLIdentity         | S_T + H_T == MDL_T for all four adapters |
+| P2 Compression test     | TestP2_CompressionTest     | STRUCTURAL / METADATA verdict in controlled scenarios |
+| P3 Non-negativity       | TestP3_NonNegativity       | H_T(x_i) >= 0, all items finite |
+| P4 Observer-dependence  | TestP4_ObserverDependence  | S_T grows monotonically with bits_per_param and model size |
+| P5 H_T ordering         | TestP5_EntropyOrdering     | Confident models have lower H_T; smooth < rough (ArrowSpace) |
+| P6 Per-item consistency | TestP6_PerItemConsistency  | entropy_bits.sum() == total_entropy_bits |
+| P7 ArrowSpace LGMRF     | TestP7_ArrowSpaceLGMRF     | Dirichlet energy order matches H_T; S_T grows with k and C0 |
+| P8 Epiplexity rank      | TestP8_EpiplexityRank      | S_T rank between small/large models is stable under capacity scaling |
+
+---
+
+## Running the test suite
+
+```bash
+# Full suite
+pytest tests/ -v
+
+# Only property tests
+pytest tests/test_epiplexity_properties.py -v
+
+# A single property class
+pytest tests/test_epiplexity_properties.py::TestP4_ObserverDependence -v
+
+# With coverage
+pytest tests/ --cov=epiplexity --cov-report=term-missing
+```
+
+---
+
+## Full worked example: scikit-learn classifier
+
+The same six-step pattern works for any probability-scoring algorithm.
+
+```python
+# examples/sklearn_rf_adapter.py
+import math
+import numpy as np
+from sklearn.ensemble import RandomForestClassifier
+from epiplexity.model import TTimeProbabilisticModel
+from epiplexity.engine import EpiplexityEngine
+
+
+def elias_gamma_bits(x: int) -> int:
+    return 2 * math.floor(math.log2(max(1, x))) + 1
+
+
+class RFConfig:
+    bits_per_split: int   = 48    # log2(F) for feature index + 32 for threshold
+    overhead_bits: float  = 64.0
+
+
+class RandomForestAdapter(TTimeProbabilisticModel):
+
+    def __init__(self, model: RandomForestClassifier, config: RFConfig):
+        self.model  = model
+        self.config = config
+
+    def description_length_bits(self) -> float:
+        n_trees     = self.model.n_estimators
+        total_nodes = sum(t.tree_.node_count for t in self.model.estimators_)
+        avg_nodes   = total_nodes / n_trees
+        param_bits  = n_trees * avg_nodes * self.config.bits_per_split
+        header_bits = elias_gamma_bits(n_trees) + elias_gamma_bits(int(avg_nodes))
+        return float(param_bits + header_bits + self.config.overhead_bits)
+
+    def log_prob(self, xy) -> float:
+        x, y  = xy
+        proba = self.model.predict_proba([x])[0]
+        p     = float(np.clip(proba[int(y)], 1e-12, 1.0))
+        return math.log(p)   # natural log
+
+    def sample(self, n: int = 1):
+        raise NotImplementedError
+
+    def raw_bits(self, X) -> float:
+        return float(sum(len(x) * 32 for x, _ in X))
+
+
+if __name__ == "__main__":
+    from sklearn.datasets import make_classification
+    from sklearn.model_selection import train_test_split
+
+    X_raw, y_raw = make_classification(
+        n_samples=500, n_features=20, n_informative=10, random_state=42
+    )
+    X_train, X_test, y_train, y_test = train_test_split(X_raw, y_raw, test_size=0.2)
+
+    rf = RandomForestClassifier(n_estimators=50, random_state=42)
+    rf.fit(X_train, y_train)
+
+    engine = EpiplexityEngine(RandomForestAdapter(rf, RFConfig()), list(zip(X_test, y_test)))
+    engine.report()
+    print(f"S_T = {engine.structural_bits / (8*1024):.2f} KB   "
+          f"H_T mean = {engine.entropy_bits.mean():.2f} bits/item")
+```
+
+> Note: a 50-tree forest typically has large S_T relative to a small test set, producing
+> Verdict: METADATA.  Increase dataset size or reduce `bits_per_split` to reflect a more
+> compressed tree representation (e.g. pruned or quantised splits) to pass the compression test.
