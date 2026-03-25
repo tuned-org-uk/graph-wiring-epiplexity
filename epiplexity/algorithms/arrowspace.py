@@ -1,3 +1,7 @@
+import numpy as np
+
+from epiplexity.model import TTimeProbabilisticModel
+
 class ArrowSpaceModelAdapter(TTimeProbabilisticModel):
     """
     Thin adapter around your ArrowSpaceProbabilisticModel to conform

@@ -1,9 +1,33 @@
 [project]
 name = "epiplexity"
 version = "0.1.0"
-description = "Add your description here"
+description = "Measure any algorithm Epiplexity as in Finzi and al. (2026) paper"
 readme = "README.md"
+license = "MIT OR Apache-2.0"
+license-files = ["LICENSE"]
 requires-python = ">=3.12"
+keywords = ["information-generation", "algorithm-analysis", "information-theory", "machine-learning", "complexity", "epiplexity"]
+classifiers = [
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Database :: Front-Ends",  # for vector DB/search integrations
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Rust",  # valid trove classifier via trove-classifiers set
+    "Operating System :: OS Independent",
+]
+
 dependencies = [
   "sentence-transformers==5.3.0"
 ]
@@ -11,7 +35,7 @@ dependencies = [
 [tool.setuptools.packages.find]
 where = ["epiplexity"]
 # include = ["my_package*"]
-# exclude = ["my_package.tests*"]  # Exclude test folders
+exclude = ["epiplexity.tests*"]  # Exclude test folders
 
 [project.optional-dependencies]
 dev = [
