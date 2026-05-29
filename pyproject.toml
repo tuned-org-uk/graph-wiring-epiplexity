@@ -34,7 +34,7 @@ dependencies = [
 
 [tool.setuptools.packages.find]
 where = ["epiplexity"]
-# include = ["my_package*"]
+include = ["epiplexity"]
 exclude = ["epiplexity.tests*"]  # Exclude test folders
 
 [project.optional-dependencies]
