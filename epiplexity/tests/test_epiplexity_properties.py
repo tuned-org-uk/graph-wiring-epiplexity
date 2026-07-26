@@ -36,7 +36,7 @@ from epiplexity.algorithms.transformer_lm import (
 )
 from epiplexity.algorithms.gnn import GNNModelAdapter, GNNEpiplexityConfig
 from epiplexity.algorithms.arrowspace import ArrowSpaceModelAdapter
-from tests.conftest import TinyMLP, TinyLM, TinyGNN, TinyGraph
+from epiplexity.tests.conftest import TinyMLP, TinyLM, TinyGNN, TinyGraph
 
 
 # ── Minimal ArrowSpaceProbabilisticModel for property tests ───────────────────

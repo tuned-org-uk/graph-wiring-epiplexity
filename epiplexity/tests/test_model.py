@@ -10,7 +10,7 @@ Verifies:
 
 import pytest
 from epiplexity.model import TTimeProbabilisticModel
-from tests.conftest import ConstantModel
+from epiplexity.tests.conftest import ConstantModel
 
 
 class TestAbstractInterface:

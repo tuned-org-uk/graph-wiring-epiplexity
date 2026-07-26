@@ -15,7 +15,7 @@ import numpy as np
 import pytest
 
 from epiplexity.engine import EpiplexityEngine
-from tests.conftest import ConstantModel
+from epiplexity.tests.conftest import ConstantModel
 
 
 def make_engine(desc_bits: float = 1024.0, log_prob_val: float = -2.0, n_items: int = 10):

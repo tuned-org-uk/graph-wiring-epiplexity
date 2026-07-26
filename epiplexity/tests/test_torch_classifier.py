@@ -21,7 +21,7 @@ from epiplexity.algorithms.torch_classifier import (
     TorchClassifierEpiplexityConfig,
 )
 from epiplexity.engine import EpiplexityEngine
-from tests.conftest import TinyMLP
+from epiplexity.tests.conftest import TinyMLP
 
 
 @pytest.fixture

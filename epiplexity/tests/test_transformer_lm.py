@@ -25,7 +25,7 @@ from epiplexity.algorithms.transformer_lm import (
     TransformerLMEpiplexityConfig,
 )
 from epiplexity.engine import EpiplexityEngine
-from tests.conftest import TinyLM
+from epiplexity.tests.conftest import TinyLM
 
 
 # ── Minimal mock tokenizer ──────────────────────────────────────────────────────

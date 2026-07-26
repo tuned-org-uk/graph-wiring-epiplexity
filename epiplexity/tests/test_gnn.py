@@ -19,7 +19,7 @@ import numpy as np
 
 from epiplexity.algorithms.gnn import GNNModelAdapter, GNNEpiplexityConfig
 from epiplexity.engine import EpiplexityEngine
-from .conftest import TinyGNN, TinyGraph
+from epiplexity.tests.conftest import TinyGNN, TinyGraph
 
 
 @pytest.fixture
