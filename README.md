@@ -1,6 +1,19 @@
 # epiplexity
 
-A generic tool for measuring **epiplexity** (Finzi et al., 2026) -- the structural information learnable by a computationally bounded observer -- for *any* algorithm wrapped as a T-time probabilistic model.
+> Measure any algorithm's **epiplexity** (Finzi et al., 2026) -- the structural information
+> learnable by a computationally bounded observer -- for *any* algorithm wrapped as a
+> T-time probabilistic model.
+
+This repository brings together three artefacts around the epiplexity measure:
+
+| | Component | What it is | Where |
+|---|-----------|------------|------|
+| 1 | **Library** | `epiplexity` -- a lean, dependency-light Python package that implements the `EpiplexityEngine` and the `TTimeProbabilisticModel` ABC, plus ready-made adapters for PyTorch classifiers, transformer LMs, GNNs, and ArrowSpace. | [`epiplexity/`](epiplexity) |
+| 2 | **Notebooks** | Two reproducible Jupyter notebooks that apply the library end-to-end: a synthetic structural-information study and a full CVE-1999--2025 case study achieving a ~38.4x compression ratio. | [`notebooks/`](notebooks) |
+| 3 | **Paper** | *"Epiplexity: A Measure on Graph Wiring"* -- the accompanying paper (LaTeX source + PDF). | [`paper/`](paper) |
+
+> **The library is the entry point.** The notebooks demonstrate it on real data, and the
+> paper (to follow) formalises the theory behind the numbers the engine reports.
 
 References, paper and notebooks [available here](https://github.com/tuned-org-uk/graph-wiring-epiplexity).
 
@@ -10,14 +23,16 @@ References, paper and notebooks [available here](https://github.com/tuned-org-uk
 
 1. [Background](#background)
 2. [Installation](#installation)
-3. [Package layout](#package-layout)
-4. [Core concepts](#core-concepts)
-5. [How to define your own adapter](#how-to-define-your-own-adapter)
-6. [Built-in adapters](#built-in-adapters)
-7. [Interpreting results](#interpreting-results)
-8. [Epiplexity properties and their tests](#epiplexity-properties-and-their-tests)
-9. [Running the test suite](#running-the-test-suite)
-10. [Full worked example: scikit-learn classifier](#full-worked-example)
+3. [Notebooks](#notebooks)
+4. [Paper](#paper)
+5. [Package layout](#package-layout)
+6. [Core concepts](#core-concepts)
+7. [How to define your own adapter](#how-to-define-your-own-adapter)
+8. [Built-in adapters](#built-in-adapters)
+9. [Interpreting results](#interpreting-results)
+10. [Epiplexity properties and their tests](#epiplexity-properties-and-their-tests)
+11. [Running the test suite](#running-the-test-suite)
+12. [Full worked example: scikit-learn classifier](#full-worked-example)
 
 ---
 
@@ -45,37 +60,115 @@ Classical Shannon entropy and Kolmogorov complexity both assume unlimited comput
 
 ## Installation
 
+The core library is intentionally lean: a plain install pulls in **only NumPy**.
+Heavy ML dependencies are opt-in through [PEP 508 extras](https://peps.python.org/pep-0508/):
+
 ```bash
-pip install -e .
-pip install transformers    # optional: LM adapter
-pip install torch_geometric # optional: GNN adapter
+# Lean core only: engine + model ABC + ArrowSpace adapter (NumPy only)
+pip install epiplexity
+
+# PyTorch classifier / GNN adapters
+pip install epiplexity[torch]
+
+# HuggingFace transformer LM adapter
+pip install epiplexity[transformers]
+
+# Full notebook stack (sentence-transformers + torch + transformers)
+pip install epiplexity[notebooks]
+
+# Everything needed to run the test suite
+pip install epiplexity[dev]
 ```
+
+From source:
+
+```bash
+uv sync                 # or: pip install -e .
+uv sync --extra notebooks   # to also run the notebooks
+```
+
+| Extra | Adds | Use it for |
+|-------|------|------------|
+| *(none)* | `numpy` | Engine, ABC, ArrowSpace adapter |
+| `[torch]` | `torch` | `torch_classifier`, `gnn` adapters |
+| `[transformers]` | `transformers` | `transformer_lm` adapter |
+| `[notebooks]` | `sentence-transformers` + `[torch,transformers]` | Reproducing the notebooks |
+| `[dev]` | `pytest`, `scipy`, `[torch,transformers]` | Running the test suite |
+
+---
+
+## Notebooks
+
+Two reproducible Jupyter notebooks apply the library end-to-end. They live in
+[`notebooks/`](notebooks) (see [`notebooks/README.md`](notebooks/README.md) for the
+full abstract and run instructions).
+
+| Notebook | Description |
+|----------|-------------|
+| [`00_arrowspace_epiplexity_structural_information.ipynb`](notebooks/00_arrowspace_epiplexity_structural_information.ipynb) | Synthetic structural-information study: builds an ArrowSpace LGMRF and walks through every epiplexity diagnostic (S_T, H_T, compression, eigenmaps). |
+| [`01_arrowspace_cve1999_2025_epiplexity_check_v3.ipynb`](notebooks/01_arrowspace_cve1999_2025_epiplexity_check_v3.ipynb) | Full CVE-1999--2025 corpus case study. Achieves a **~38.4x compression ratio** over raw float32 storage, passing all three structural-information diagnostic tests. |
+
+To run them locally:
+
+```bash
+uv venv .venv && uv sync --extra notebooks
+# or: pip install -e .[notebooks]
+jupyter lab notebooks/
+```
+
+The notebooks have their own `pyproject.toml` (in `notebooks/`) pinning the analysis
+stack (pandas, pyarrow, scikit-learn, scipy, matplotlib, plotly, seaborn). Sample data
+lives in [`samples/`](samples) and rendered outputs in [`output/`](output) (use the `v3`
+plots). Legacy notebook revisions are kept under `notebooks/legacy/`.
+
+---
+
+## Paper
+
+The accompanying paper, *"Epiplexity: A Measure on Graph Wiring"*, is in
+[`paper/`](paper):
+
+- [`paper/Epiplexity_A_measure_on_Graph_Wiring.pdf`](paper/Epiplexity_A_measure_on_Graph_Wiring.pdf) -- current PDF
+- [`paper/Epiplexity_A_measure_on_Graph_Wiring.tex`](paper/Epiplexity_A_measure_on_Graph_Wiring.tex) -- LaTeX source
+
+The paper formalises the theory the engine implements and reports the empirical results
+from the notebooks. **It is the authoritative reference for the definitions behind
+`S_T(X)`, `H_T(X)`, and the compression test**; the library is its executable companion.
+
+> Citation (to follow the camera-ready revision):
+>
+> Finzi, Qiu, Jiang, Izmailov, Kolter, Wilson -- *"From Entropy to Epiplexity: Rethinking
+> Information for Computationally Bounded Intelligence"*, arXiv:2601.03220, 2026.
 
 ---
 
 ## Package layout
 
 ```
-epiplexity/
-|-- model.py                  # TTimeProbabilisticModel ABC
-|-- engine.py                 # EpiplexityEngine (MDL calculator)
-`-- algorithms/
-    |-- arrowspace.py         # ArrowSpace LGMRF adapter
-    |-- torch_classifier.py   # PyTorch classifier adapter
-    |-- transformer_lm.py     # Auto-regressive LM adapter
-    `-- gnn.py                # Graph neural network adapter
+epiplexity/                     # the library (Python package)
+|-- model.py                    # TTimeProbabilisticModel ABC
+|-- engine.py                   # EpiplexityEngine (MDL calculator)
+|-- algorithms/
+|   |-- arrowspace.py           # ArrowSpace LGMRF adapter        [core, numpy-only]
+|   |-- torch_classifier.py      # PyTorch classifier adapter      [extra: torch]
+|   |-- transformer_lm.py       # Auto-regressive LM adapter      [extra: transformers]
+|   `-- gnn.py                  # Graph neural network adapter     [extra: torch]
+`-- tests/                      # pytest suite (109 tests)
 
-tests/
-|-- conftest.py                      # Shared fixtures, tiny synthetic models
-|-- test_model.py                    # ABC contract tests
-|-- test_engine.py                   # Engine arithmetic + verdict tests
-|-- test_torch_classifier.py         # TorchClassifierModelAdapter tests
-|-- test_transformer_lm.py           # TransformerLMModelAdapter tests
-|-- test_gnn.py                      # GNNModelAdapter tests
-`-- test_epiplexity_properties.py    # Cross-algorithm semantic property tests (P1-P8)
-```
+notebooks/                      # reproducible case studies (Jupyter)
+|-- 00_arrowspace_epiplexity_structural_information.ipynb
+|-- 01_arrowspace_cve1999_2025_epiplexity_check_v3.ipynb
+|-- legacy/                     # earlier notebook revisions
+|-- pyproject.toml              # analysis-stack pins (pandas, pyarrow, ...)
+`-- README.md                   # abstract + run instructions
 
----
+paper/                          # accompanying paper (LaTeX + PDF)
+|-- Epiplexity_A_measure_on_Graph_Wiring.tex
+`-- Epiplexity_A_measure_on_Graph_Wiring.pdf
+
+samples/                        # sample data (download as per samples/.gitkeep)
+output/                         # rendered plots (use the v3 figures)
+
 
 ## Core concepts
 
@@ -280,6 +373,8 @@ Epiplexity report
 
 ### PyTorch classifier
 
+> Requires `pip install epiplexity[torch]`.
+
 ```python
 from epiplexity.algorithms.torch_classifier import (
     TorchClassifierModelAdapter, TorchClassifierEpiplexityConfig,
@@ -293,6 +388,8 @@ engine  = EpiplexityEngine(adapter, dataset)  # dataset: list of (Tensor, int)
 - H_T(x_i) = -log2 P(y_i|x_i) under softmax
 
 ### Transformer language model
+
+> Requires `pip install epiplexity[transformers]`.
 
 ```python
 from epiplexity.algorithms.transformer_lm import (
@@ -312,6 +409,8 @@ engine    = EpiplexityEngine(adapter, ["text item 1", "text item 2"])
 
 ### Graph neural network
 
+> Requires `pip install epiplexity[torch]`.
+
 ```python
 from epiplexity.algorithms.gnn import GNNModelAdapter, GNNEpiplexityConfig
 cfg     = GNNEpiplexityConfig(bits_per_param=32, overhead_bits=16384.0)
@@ -321,6 +420,8 @@ engine  = EpiplexityEngine(adapter, graph_dataset)  # list of (graph_obj, int)
 ```
 
 ### ArrowSpace spectral LGMRF
+
+> Core adapter -- available with a plain `pip install epiplexity` (NumPy only).
 
 ```python
 from epiplexity.algorithms.arrowspace import ArrowSpaceModelAdapter
@@ -369,18 +470,23 @@ observer. S_T grows monotonically -- this is the observer-dependence property (P
 
 ## Running the test suite
 
-```bash
-# Full suite
-pytest tests/ -v
+> Requires `pip install epiplexity[dev]` (pulls in `pytest`, `scipy`, `torch`, `transformers`).
 
-# Only property tests
-pytest tests/test_epiplexity_properties.py -v
+```bash
+# Full suite (109 tests across the library + packaging contract)
+pytest -v
+
+# Only the cross-algorithm property tests (P1-P8)
+pytest epiplexity/tests/test_epiplexity_properties.py -v
 
 # A single property class
-pytest tests/test_epiplexity_properties.py::TestP4_ObserverDependence -v
+pytest epiplexity/tests/test_epiplexity_properties.py::TestP4_ObserverDependence -v
+
+# The 0.5.0 packaging / leanness contract tests
+pytest epiplexity/tests/test_packaging.py -v
 
 # With coverage
-pytest tests/ --cov=epiplexity --cov-report=term-missing
+pytest --cov=epiplexity --cov-report=term-missing
 ```
 
 ---

@@ -4,10 +4,12 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["epiplexity"]
+# Tests ship in the sdist (for source-side test runs) but NOT in the wheel.
+exclude = ["epiplexity/tests"]
 
 [project]
 name = "epiplexity"
-version = "0.4.0"
+version = "0.5.0"
 description = "Measure any algorithm Epiplexity as in Finzi and al. (2026) paper"
 readme = "README.md"
 license = "MIT OR Apache-2.0"
@@ -31,27 +33,38 @@ classifiers = [
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
-    "Programming Language :: Rust",  # valid trove classifier via trove-classifiers set
     "Operating System :: OS Independent",
 ]
 
+# Lean core: only numpy is required to use the engine, the TTimeProbabilisticModel
+# ABC, and the ArrowSpace adapter. Heavy ML deps are opt-in via extras.
 dependencies = [
-  "sentence-transformers==5.6.1"
+  "numpy>=1.20",
 ]
 
-[tool.setuptools.packages.find]
-where = ["epiplexity"]
-include = ["epiplexity"]
-exclude = ["epiplexity.tests*"]  # Exclude test folders
-
 [project.optional-dependencies]
+# PyTorch-based algorithm adapters (torch_classifier, gnn).
+torch = [
+  "torch",
+]
+# HuggingFace Transformers-based adapter (transformer_lm).
+transformers = [
+  "transformers",
+]
+# Notebook stack: sentence-transformers + the algorithm extras needed to run the
+# example notebooks. Install with `pip install epiplexity[notebooks]`.
+notebooks = [
+  "sentence-transformers==5.6.1",
+  "epiplexity[torch,transformers]",
+]
+# Test/development stack.
 dev = [
-    "pytest>=8.0",
+  "pytest>=8.0",
+  "epiplexity[torch,transformers]",
+  "scipy",
 ]
 
 [tool.pytest.ini_options]
 testpaths = ["epiplexity/tests"]
 pythonpath = ["."]
 addopts = ["--import-mode=importlib", "--maxfail=2", "-v"]
-
-
