@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Epiplexity coding result v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "library_version", "method", "score_kind", "unit",
+    "model_bits", "data_bits", "total_bits", "observation_count", "raw_bits",
+    "baseline_comparable", "compression_ratio", "verdict", "diagnostics", "metadata"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "library_version": {"type": "string"},
+    "method": {"enum": ["static", "prequential", "requential"]},
+    "score_kind": {"enum": ["discrete", "conditional", "density"]},
+    "unit": {"const": "bits"},
+    "model_bits": {"type": "number"},
+    "data_bits": {"type": "number"},
+    "total_bits": {"type": "number"},
+    "observation_count": {"type": "integer", "minimum": 0, "maximum": 9007199254740992},
+    "raw_bits": {"type": ["number", "null"], "minimum": 0},
+    "baseline_comparable": {"type": "boolean"},
+    "compression_ratio": {"type": ["number", "null"], "minimum": 0},
+    "verdict": {"enum": ["STRUCTURAL", "METADATA", "NOT_COMPARABLE"]},
+    "diagnostics": {
+      "type": "array", "uniqueItems": true,
+      "items": {"enum": ["negative_model_bits", "density_not_discrete_code",
+                         "baseline_not_comparable", "nonpositive_total_bits"]}
+    },
+    "metadata": {"type": "object"},
+    "entropy_bits": {"type": "array", "items": {"type": "number"}}
+  }
+}

@@ -1,8 +1,25 @@
 # epiplexity
 
-> Measure any algorithm's **epiplexity** (Finzi et al., 2026) -- the structural information
-> learnable by a computationally bounded observer -- for *any* algorithm wrapped as a
-> T-time probabilistic model.
+> **v0.6.1:** static model-code accounting, log-based epiplexity estimates,
+> and streaming fitted-model scores. NumPy-only core, Python API, and JSON CLI.
+
+## New in v0.6
+
+- `PrequentialEstimator` and `RequentialEstimator` consume training logs.
+- `EpiplexityEngine.from_batches()` supports one-pass aggregate evaluation.
+- `CodingResult` provides versioned JSON output and a packaged JSON Schema.
+- `Candidate`, `pareto_frontier`, and `select_under_budget` use explicit compute measurements.
+- `epiplexity prequential training-log.json` runs without a training framework.
+
+See the **[v0.6 API and migration guide](docs/v0.6.md)** for working examples,
+input contracts, cloud use, and the reference vectors for a native-language port.
+
+**Interpretation:** a fitted model's description cost is a static proxy, not
+the MDL-optimal epiplexity. Log estimates use bits too, but depend on the training
+protocol. Parameter precision is not a time bound. Gaussian density scores and
+conditional scores with unmatched raw baselines now report `NOT_COMPARABLE`.
+The older notebook compression claims below require a matched discrete encoding
+before they can be interpreted as storage compression.
 
 This repository brings together three artefacts around the epiplexity measure:
 
@@ -51,7 +68,8 @@ Classical Shannon entropy and Kolmogorov complexity both assume unlimited comput
 | H_T(X)   | **Time-bounded entropy** | Per-item irreducible noise for a bounded observer |
 | MDL_T(X) | Two-part MDL code        | Total description length under time-bound T |
 
-**Compression test:** if `MDL_T(X) < n_raw` the model captures real structure, not metadata.
+**Compression test:** a valid code that is shorter than a matched raw baseline
+compresses the encoded targets. This alone does not establish an MDL optimum.
 
 > Finzi, Qiu, Jiang, Izmailov, Kolter, Wilson -- *"From Entropy to Epiplexity: Rethinking
 > Information for Computationally Bounded Intelligence"*, arXiv:2601.03220, 2026.
@@ -83,17 +101,17 @@ pip install epiplexity[dev]
 From source:
 
 ```bash
-uv sync                 # or: pip install -e .
-uv sync --extra notebooks   # to also run the notebooks
+UV_PROJECT_ENVIRONMENT=.venv-code uv sync
+UV_PROJECT_ENVIRONMENT=.venv-code uv sync --extra notebooks
 ```
 
 | Extra | Adds | Use it for |
 |-------|------|------------|
 | *(none)* | `numpy` | Engine, ABC, ArrowSpace adapter |
 | `[torch]` | `torch` | `torch_classifier`, `gnn` adapters |
-| `[transformers]` | `transformers` | `transformer_lm` adapter |
+| `[transformers]` | `torch`, `transformers` | `transformer_lm` adapter |
 | `[notebooks]` | `sentence-transformers` + `[torch,transformers]` | Reproducing the notebooks |
-| `[dev]` | `pytest`, `scipy`, `[torch,transformers]` | Running the test suite |
+| `[dev]` | `pytest`, `jsonschema`, `scipy`, `[torch,transformers]` | Running the test suite |
 
 ---
 
@@ -111,9 +129,8 @@ full abstract and run instructions).
 To run them locally:
 
 ```bash
-uv venv .venv && uv sync --extra notebooks
-# or: pip install -e .[notebooks]
-jupyter lab notebooks/
+UV_PROJECT_ENVIRONMENT=.venv-code uv sync --extra notebooks
+UV_PROJECT_ENVIRONMENT=.venv-code uv run --with jupyterlab jupyter lab notebooks/
 ```
 
 The notebooks have their own `pyproject.toml` (in `notebooks/`) pinning the analysis
@@ -153,7 +170,11 @@ epiplexity/                     # the library (Python package)
 |   |-- torch_classifier.py      # PyTorch classifier adapter      [extra: torch]
 |   |-- transformer_lm.py       # Auto-regressive LM adapter      [extra: transformers]
 |   `-- gnn.py                  # Graph neural network adapter     [extra: torch]
-`-- tests/                      # pytest suite (109 tests)
+|-- estimators.py                # prequential and requential log estimators
+|-- results.py                   # immutable results and JSON contract
+|-- selection.py                 # measured-budget candidate frontier
+|-- cli.py                       # JSON log ingestion
+`-- tests/                      # pytest suite and portable reference vectors
 
 notebooks/                      # reproducible case studies (Jupyter)
 |-- 00_arrowspace_epiplexity_structural_information.ipynb
@@ -168,7 +189,7 @@ paper/                          # accompanying paper (LaTeX + PDF)
 
 samples/                        # sample data (download as per samples/.gitkeep)
 output/                         # rendered plots (use the v3 figures)
-
+```
 
 ## Core concepts
 
@@ -234,7 +255,8 @@ class MyAlgorithmAdapter(TTimeProbabilisticModel):
 
 ### Step 2 -- description_length_bits -> S_T(X)
 
-**S_T(X)** is the epiplexity proxy: bits to fully specify the algorithm's program.
+The static model cost is a proxy: bits assigned to describe the model program.
+The adapter must account for the state needed to reconstruct its predictions.
 
 What to include:
 
@@ -273,8 +295,8 @@ def description_length_bits(self) -> float:
     return float(param_bits + arch_bits + overhead)
 ```
 
-> Observer-dependence (Property P4): S_T should grow monotonically with
-> bits_per_param and model size -- more compute means more structure encoded.
+> The accounting cost grows with `bits_per_param` and parameter count.
+> This checks the encoding formula, not dependence on a measured compute bound.
 
 ---
 
@@ -284,7 +306,8 @@ Return `log P(x)` in **natural logarithm** for a single item.  The engine conver
 
     H_T(x_i) = -log2 P(x_i) = -log P(x_i) / log(2)
 
-This must be <= 0 since P(x) is a probability in (0, 1].
+Discrete log probabilities must be <= 0. Continuous log densities can be
+positive; adapters must declare `score_kind = "density"` for them.
 
 Probabilistic interpretation guide:
 
@@ -446,14 +469,18 @@ engine  = EpiplexityEngine(adapter, X)  # X: np.ndarray (N, F)
 | Verdict: STRUCTURAL    | MDL_T < raw_bits. The algorithm found learnable structure. |
 | Verdict: METADATA      | MDL_T >= raw_bits. The algorithm is not compressive for this data. |
 
-**bits_per_param is the T-budget knob.** Lower = more restricted observer. Higher = richer
-observer. S_T grows monotonically -- this is the observer-dependence property (P4).
+**`bits_per_param` is an encoding precision setting.** It does not change the
+model weights or enforce a compute budget. Use measured costs with the v0.6
+candidate selector. `report()` and JSON output return `NOT_COMPARABLE` when the
+baseline and scores do not encode the same targets; the legacy arithmetic
+`compression_ratio()` is retained for compatibility.
 
 ---
 
 ## Epiplexity properties and their tests
 
-`tests/test_epiplexity_properties.py` verifies eight formal properties across all adapters:
+`epiplexity/tests/test_epiplexity_properties.py` checks eight numerical properties
+on controlled fixtures. These are not proofs of the formal epiplexity definition:
 
 | Property | Test class | What is verified |
 |----------|------------|------------------|
@@ -473,8 +500,9 @@ observer. S_T grows monotonically -- this is the observer-dependence property (P
 > Requires `pip install epiplexity[dev]` (pulls in `pytest`, `scipy`, `torch`, `transformers`).
 
 ```bash
-# Full suite (109 tests across the library + packaging contract)
-pytest -v
+# Full suite, including release packaging checks
+UV_PROJECT_ENVIRONMENT=.venv-code uv build
+UV_PROJECT_ENVIRONMENT=.venv-code uv run --extra dev pytest -v
 
 # Only the cross-algorithm property tests (P1-P8)
 pytest epiplexity/tests/test_epiplexity_properties.py -v
@@ -482,7 +510,7 @@ pytest epiplexity/tests/test_epiplexity_properties.py -v
 # A single property class
 pytest epiplexity/tests/test_epiplexity_properties.py::TestP4_ObserverDependence -v
 
-# The 0.5.0 packaging / leanness contract tests
+# The 0.6.1 packaging / leanness contract tests
 pytest epiplexity/tests/test_packaging.py -v
 
 # With coverage
@@ -558,6 +586,7 @@ if __name__ == "__main__":
           f"H_T mean = {engine.entropy_bits.mean():.2f} bits/item")
 ```
 
-> Note: a 50-tree forest typically has large S_T relative to a small test set, producing
-> Verdict: METADATA.  Increase dataset size or reduce `bits_per_split` to reflect a more
-> compressed tree representation (e.g. pruned or quantised splits) to pass the compression test.
+> This legacy example scores labels but counts input feature bytes as its raw
+> baseline. Set `score_kind = "conditional"` and `baseline_comparable = False`
+> in the adapter, or supply a matched label-code baseline. Reducing a cost
+> estimate without changing the actual encoding is not evidence of compression.

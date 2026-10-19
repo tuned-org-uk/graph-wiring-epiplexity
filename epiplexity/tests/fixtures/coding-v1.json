@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0",
+  "tolerance": {"relative": 1e-12, "absolute": 1e-12},
+  "cases": [
+    {
+      "name": "small-structure-large-residual",
+      "method": "prequential",
+      "input": {"tokens": [0, 1], "losses": [10000000000000002, 10000000000000000], "loss_unit": "bits"},
+      "expected": {"model_bits": 1.0, "data_bits": 10000000000000000.0,
+                   "total_bits": 10000000000000000.0, "observation_count": 1}
+    },
+    {
+      "name": "irregular-prequential-bits",
+      "method": "prequential",
+      "input": {"tokens": [0, 2, 5], "losses": [4, 2, 1], "loss_unit": "bits"},
+      "expected": {"model_bits": 5.5, "data_bits": 5.0, "total_bits": 10.5, "observation_count": 5}
+    },
+    {
+      "name": "constant-loss-no-structure",
+      "method": "prequential",
+      "input": {"tokens": [0, 3, 10], "losses": [2, 2, 2], "loss_unit": "bits"},
+      "expected": {"model_bits": 0.0, "data_bits": 20.0, "total_bits": 20.0, "observation_count": 10}
+    },
+    {
+      "name": "worsening-loss-signed-estimate",
+      "method": "prequential",
+      "input": {"tokens": [0, 10], "losses": [1, 3], "loss_unit": "bits"},
+      "expected": {"model_bits": -10.0, "data_bits": 30.0, "total_bits": 20.0, "observation_count": 10}
+    },
+    {
+      "name": "variable-student-batches",
+      "method": "requential",
+      "input": {"kl_values": [0.5, 0.25, 0], "token_counts": [4, 8, 3],
+                "final_loss": 2, "evaluation_tokens": 7, "loss_unit": "bits"},
+      "expected": {"model_bits": 4.0, "data_bits": 14.0, "total_bits": 18.0, "observation_count": 7}
+    },
+    {
+      "name": "nats-to-bits",
+      "method": "requential",
+      "input": {"kl_values": [0.6931471805599453], "token_counts": [4],
+                "final_loss": 0.6931471805599453, "evaluation_tokens": 7},
+      "expected": {"model_bits": 4.0, "data_bits": 7.0, "total_bits": 11.0, "observation_count": 7}
+    }
+  ]
+}

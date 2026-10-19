@@ -27,6 +27,10 @@ class TransformerLMModelAdapter(TTimeProbabilisticModel):
     via the product of token probabilities under the LM.
     """
 
+    # Scores condition on the first token and may omit a truncated suffix.
+    score_kind = "conditional"
+    baseline_comparable = False
+
     def __init__(
         self,
         model: PreTrainedModel,

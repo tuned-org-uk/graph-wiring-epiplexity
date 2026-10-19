@@ -32,6 +32,9 @@ class GNNModelAdapter(TTimeProbabilisticModel):
             - optional graph-level features (attr 'u' or 'graph_attr').
     """
 
+    score_kind = "conditional"
+    baseline_comparable = False  # raw_bits includes the conditioning graph
+
     def __init__(
         self,
         model: nn.Module,

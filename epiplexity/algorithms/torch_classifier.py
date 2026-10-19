@@ -33,6 +33,9 @@ class TorchClassifierModelAdapter(TTimeProbabilisticModel):
     and coding only the labels, using the classifier's predicted probabilities.
     """
 
+    score_kind = "conditional"
+    baseline_comparable = False  # legacy raw_bits counts inputs, not labels
+
     def __init__(
         self,
         model: nn.Module,
@@ -60,15 +63,22 @@ class TorchClassifierModelAdapter(TTimeProbabilisticModel):
 
         xy: (input_tensor, label_index)
         """
-        x, y = xy
-        x = x.to(self.device).unsqueeze(0)  # add batch dim
-        y = int(y)
+        return float(self.batch_log_prob([xy])[0])
 
+    def batch_log_prob(self, X: Sequence[Tuple[torch.Tensor, int]]) -> np.ndarray:
+        """Score equal-shaped inputs in one forward pass."""
+        if not len(X):
+            return np.empty(0, dtype=np.float64)
+        inputs = torch.stack([x for x, _ in X]).to(self.device)
+        labels = torch.tensor([int(y) for _, y in X], device=self.device)
         with torch.no_grad():
-            logits = self.model(x)  # shape (1, C)
-            log_probs = torch.log_softmax(logits, dim=-1)  # natural log
-            lp = log_probs[0, y].item()
-        return float(lp)
+            logits = self.model(inputs)
+            if logits.ndim != 2 or logits.shape[0] != len(X):
+                raise ValueError("classifier must return (batch, classes) logits")
+            if torch.any(labels < 0) or torch.any(labels >= logits.shape[1]):
+                raise ValueError("label index outside classifier output range")
+            values = torch.log_softmax(logits, dim=-1).gather(1, labels[:, None])
+        return values[:, 0].to(dtype=torch.float64, device="cpu").numpy()
 
     def sample(self, n: int = 1):
         """

@@ -114,31 +114,31 @@ def constant_model():
 
 @pytest.fixture
 def tiny_mlp():
-    torch.manual_seed(0)
+    torch.manual_seed(3407)
     return TinyMLP(input_dim=4, num_classes=3)
 
 
 @pytest.fixture
 def tiny_lm():
-    torch.manual_seed(0)
+    torch.manual_seed(3407)
     return TinyLM()
 
 
 @pytest.fixture
 def tiny_gnn():
-    torch.manual_seed(0)
+    torch.manual_seed(3407)
     return TinyGNN(input_dim=4, num_classes=3)
 
 
 @pytest.fixture
 def float_dataset():
     """10 items, each a 4-dim float32 tensor + integer label."""
-    torch.manual_seed(1)
+    torch.manual_seed(3407)
     return [(torch.randn(4), i % 3) for i in range(10)]
 
 
 @pytest.fixture
 def graph_dataset():
     """5 synthetic graph objects with labels."""
-    torch.manual_seed(2)
+    torch.manual_seed(3407)
     return [(TinyGraph(), i % 3) for i in range(5)]

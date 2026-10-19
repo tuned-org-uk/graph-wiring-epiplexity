@@ -1,9 +1,9 @@
 # tests/test_packaging.py
 """
-Tests for the epiplexity 0.5.0 packaging contract.
+Tests for the epiplexity 0.6.1 packaging contract.
 
 Verifies:
-  - Version is 0.5.0.
+  - Version is 0.6.1 and agrees with the public API.
   - sentence-transformers is NOT a core dependency (moved under [notebooks]).
   - torch and transformers are NOT core dependencies (split into [torch] / [transformers]).
   - numpy IS a core dependency (the only runtime dep of the lean core).
@@ -14,8 +14,7 @@ Verifies:
     import torch, transformers, or sentence_transformers (static AST check).
   - The built wheel's METADATA lists no heavy deps in its core Requires-Dist.
 
-These tests fail against the 0.4.0 packaging and pass once the pyproject is
-restructured for the lean 0.5.0 release.
+Build the wheel before running the release checks.
 """
 
 from __future__ import annotations
@@ -34,6 +33,11 @@ CORE_MODULES = [
     PKG_ROOT / "__init__.py",
     PKG_ROOT / "engine.py",
     PKG_ROOT / "model.py",
+    PKG_ROOT / "results.py",
+    PKG_ROOT / "estimators.py",
+    PKG_ROOT / "selection.py",
+    PKG_ROOT / "cli.py",
+    PKG_ROOT / "__main__.py",
     PKG_ROOT / "algorithms" / "__init__.py",
     PKG_ROOT / "algorithms" / "arrowspace.py",
 ]
@@ -76,8 +80,15 @@ def _extra_dep_names(pyproject: dict, extra: str) -> set[str]:
 
 class TestPyprojectMetadata:
 
-    def test_version_is_0_5_0(self):
-        assert _load_pyproject()["project"]["version"] == "0.5.0"
+    def test_version_is_0_6_1(self):
+        from epiplexity import __version__
+        assert _load_pyproject()["project"]["version"] == __version__ == "0.6.1"
+
+    def test_transformers_extra_includes_its_torch_runtime(self):
+        assert "torch" in _extra_dep_names(_load_pyproject(), "transformers")
+
+    def test_cli_entry_point(self):
+        assert _load_pyproject()["project"]["scripts"]["epiplexity"] == "epiplexity.cli:main"
 
     def test_numpy_is_a_core_dependency(self):
         assert "numpy" in _core_dep_names(_load_pyproject())
@@ -134,7 +145,7 @@ class TestBuiltWheelMetadata:
         dist = ROOT / "dist"
         if not dist.exists():
             return None
-        wheels = sorted(dist.glob("epiplexity-0.5.0-*.whl"))
+        wheels = sorted(dist.glob("epiplexity-0.6.1-*.whl"))
         if not wheels:
             return None
         import zipfile
@@ -147,14 +158,14 @@ class TestBuiltWheelMetadata:
                 return None
             return z.read(meta_names[0]).decode("utf-8")
 
-    def test_wheel_built_for_0_5_0(self, wheel_metadata):
+    def test_wheel_built_for_0_6_1(self, wheel_metadata):
         if wheel_metadata is None:
-            pytest.skip("no 0.5.0 wheel built yet; rebuild with `uv build` then re-run")
-        assert "Version: 0.5.0" in wheel_metadata
+            pytest.skip("no 0.6.1 wheel built yet; rebuild with `uv build` then re-run")
+        assert "Version: 0.6.1" in wheel_metadata
 
     def test_wheel_core_requires_dist_excludes_heavy_deps(self, wheel_metadata):
         if wheel_metadata is None:
-            pytest.skip("no 0.5.0 wheel built yet")
+            pytest.skip("no 0.6.1 wheel built yet")
         for line in wheel_metadata.splitlines():
             if not line.startswith("Requires-Dist:"):
                 continue
@@ -179,19 +190,19 @@ class TestBuiltWheelExcludesTests:
         dist = ROOT / "dist"
         if not dist.exists():
             return None
-        wheels = sorted(dist.glob("epiplexity-0.5.0-*.whl"))
+        wheels = sorted(dist.glob("epiplexity-0.6.1-*.whl"))
         if not wheels:
             return None
         with zipfile.ZipFile(wheels[-1]) as z:
             return z.namelist()
 
-    def test_wheel_built_for_0_5_0(self, wheel_names):
+    def test_wheel_built_for_0_6_1(self, wheel_names):
         if wheel_names is None:
-            pytest.skip("no 0.5.0 wheel built yet; rebuild with `uv build` then re-run")
+            pytest.skip("no 0.6.1 wheel built yet; rebuild with `uv build` then re-run")
 
     def test_wheel_excludes_tests_package(self, wheel_names):
         if wheel_names is None:
-            pytest.skip("no 0.5.0 wheel built yet")
+            pytest.skip("no 0.6.1 wheel built yet")
         test_entries = [n for n in wheel_names
                         if "/tests/" in n or n.startswith("epiplexity/tests/")
                         or n.endswith("/tests")]

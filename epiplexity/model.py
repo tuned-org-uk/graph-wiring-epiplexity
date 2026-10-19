@@ -1,17 +1,29 @@
 from abc import ABC, abstractmethod
-from typing import Any, Protocol
+from typing import Any
+
+import numpy as np
 
 
 class TTimeProbabilisticModel(ABC):
     """
-    Abstract epiplexity interface for arbitrary algorithms.
-    Matches the Definition 7 + MDL two-part code pattern in your notebook.
+    Interface for fitted-model code accounting.
+
+    This interface alone does not enforce a time bound, normalisation, or
+    MDL-optimal model selection. Density scores require a discrete encoding
+    before comparison with raw storage sizes.
     """
+
+    score_kind = "discrete"  # discrete, conditional, or density
+    baseline_comparable = True
+
+    def batch_log_prob(self, X: Any) -> np.ndarray:
+        """Return one natural-log score per item; override to vectorise."""
+        return np.asarray([self.log_prob(x) for x in X], dtype=np.float64)
 
     @abstractmethod
     def description_length_bits(self) -> float:
         """
-        Return S_T(X): description length (in bits) of this model/program,
+        Return a candidate description length (in bits) of this model/program,
         including hyperparameters, initialisation, and any learned state.
         """
         ...

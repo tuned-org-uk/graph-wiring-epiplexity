@@ -8,6 +8,9 @@ class ArrowSpaceModelAdapter(TTimeProbabilisticModel):
     to the generic epiplexity interface.
     """
 
+    score_kind = "density"
+    baseline_comparable = False
+
     def __init__(self, arrowspace_model, C0: int, k: int, b: int = 32):
         self.mdl = arrowspace_model
         self.C0 = C0
